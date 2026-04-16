@@ -1,0 +1,57 @@
+on:
+  workflow_call:
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write  # needed to post PR comments
+      issues: write
+    steps:
+      # Check out the STUDENT's fastapi repo (the calling repo) at the PR merge
+      # commit. In a workflow_call context the default checkout target is always
+      # the calling (student's) repo — not this grader repo.
+      - uses: actions/checkout@v4
+        with:
+          path: student-code
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Install the student's version of FastAPI directly from their fork.
+      # FastAPI is a pure-Python package so pip install -e works without
+      # any compiled extensions.
+      - name: Install student's FastAPI and test dependencies
+        run: pip install -e "./student-code" pytest
+
+      # Check out this grader repo to get the custom test file.
+      # For a private grader repo add: token: ${{ secrets.GRADER_TOKEN }}
+      # (store a fine-grained PAT with read access as an org-level secret;
+      # secrets: inherit in the template trigger will forward it automatically).
+      - uses: actions/checkout@v4
+        with:
+          repository: AcademyDiscovery/fast-api-grader
+          path: grader
+
+      - name: Run grading tests
+        id: test
+        run: |
+          pytest grader/tests/test_fix.py -v 2>&1 | tee test_output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Post PR comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('test_output.txt', 'utf8');
+            const passed = '${{ steps.test.outputs.exit_code }}' === '0';
+            const icon = passed ? '✅' : '❌';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `## ${icon} Grading Results\n\`\`\`\n${output}\n\`\`\``
+            });
