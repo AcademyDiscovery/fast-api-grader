@@ -37,9 +37,9 @@ jobs:
       - name: Run grading tests
         id: test
         run: |
+          set -o pipefail
           cd grader
           bash scripts/run_tests.sh -v 2>&1 | tee ../test_output.txt
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
       - name: Post PR comment
         if: always()
@@ -48,7 +48,7 @@ jobs:
           script: |
             const fs = require('fs');
             const output = fs.readFileSync('test_output.txt', 'utf8');
-            const passed = '${{ steps.test.outputs.exit_code }}' === '0';
+            const passed = '${{ steps.test.outcome }}' === 'success';
             const icon = passed ? '✅' : '❌';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
