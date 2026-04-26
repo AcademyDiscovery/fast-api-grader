@@ -23,7 +23,7 @@ jobs:
       # FastAPI is a pure-Python package so pip install -e works without
       # any compiled extensions.
       - name: Install student's FastAPI and test dependencies
-        run: pip install -e "./student-code[all]" pytest httpx inline-snapshot pytest-xdist
+        run: pip install -e "./student-code[all]" pytest httpx inline-snapshot pytest-xdist dirty-equals
 
       # Check out this grader repo to get the custom test file.
       # For a private grader repo add: token: ${{ secrets.GRADER_TOKEN }}
