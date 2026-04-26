@@ -3,4 +3,4 @@
 set -e
 set -x
 
-pytest -n auto --dist loadgroup  tests tests/ ${@}
+pytest -n auto --dist loadgroup tests/ "${@}"
