@@ -51,21 +51,7 @@ jobs:
             const passed = '${{ steps.test.outcome }}' === 'success';
             const icon = passed ? '✅' : '❌';
 
-            // Extract counts from the pytest summary line, e.g. "2 failed, 5 passed in 0.12s"
-            const summaryLine = output.match(/^=+ (.+) =+$/m)?.[1] ?? '';
-            const failedMatch = summaryLine.match(/(\d+) failed/);
-            const passedMatch = summaryLine.match(/(\d+) passed/);
-            const failedCount = failedMatch ? parseInt(failedMatch[1]) : 0;
-            const passedCount = passedMatch ? parseInt(passedMatch[1]) : 0;
-
-            let summary;
-            if (passed) {
-              summary = `All ${passedCount} tests passed.`;
-            } else if (failedCount > 0) {
-              summary = `${failedCount} test${failedCount > 1 ? 's' : ''} failed, ${passedCount} passed.`;
-            } else {
-              summary = summaryLine || 'Tests did not complete successfully.';
-            }
+            const summary = passed ? 'All tests passed.' : 'Some tests failed.';
 
             const MAX = 60_000;
             const displayOutput = output.length > MAX
